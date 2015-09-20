@@ -19,7 +19,6 @@ use cargo::util::{CliError, CliResult, lev_distance, Config};
 
 #[derive(RustcDecodable)]
 struct Flags {
-    flag_list: bool,
     flag_verbose: bool,
     flag_quiet: bool,
     flag_color: Option<String>,
@@ -37,21 +36,21 @@ Usage:
 Options:
     -h, --help          Display this message
     -V, --version       Print version info and exit
-    --list              List installed commands
     -v, --verbose       Use verbose output
     -q, --quiet         No output printed to stdout
     --color WHEN        Coloring: auto, always, never
 
 Some common cargo commands are:
+    bench       Run the benchmarks
     build       Compile the current project
     clean       Remove the target directory
     doc         Build this project's and its dependencies' documentation
+    list        List installed commands
     new         Create a new cargo project
     run         Build and execute src/main.rs
-    test        Run the tests
-    bench       Run the benchmarks
-    update      Update dependencies listed in Cargo.lock
     search      Search registry for crates
+    test        Run the tests
+    update      Update dependencies listed in Cargo.lock
 
 See 'cargo help <command>' for more information on a specific command.
 ";
@@ -81,6 +80,7 @@ macro_rules! each_subcommand{ ($mac:ident) => ({
     $mac!(generate_lockfile);
     $mac!(git_checkout);
     $mac!(help);
+    $mac!(list);
     $mac!(locate_project);
     $mac!(login);
     $mac!(new);
@@ -109,14 +109,6 @@ fn execute(flags: Flags, config: &Config) -> CliResult<Option<()>> {
     try!(config.shell().set_color_config(flags.flag_color.as_ref().map(|s| &s[..])));
 
     init_git_transports(config);
-
-    if flags.flag_list {
-        println!("Installed Commands:");
-        for command in list_commands().into_iter() {
-            println!("    {}", command);
-        };
-        return Ok(None)
-    }
 
     let args = match &flags.arg_command[..] {
         // For the commands `cargo` and `cargo help`, re-execute ourselves as
